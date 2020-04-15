@@ -6,9 +6,7 @@
 //  Copyright © 2020 Vitali Kurlovich. All rights reserved.
 //
 
-import Compression
 import Foundation
-import os.log
 
 public
 enum DecoderError: Error {

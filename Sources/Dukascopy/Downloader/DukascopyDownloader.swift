@@ -12,10 +12,6 @@ import Foundation
     import FoundationNetworking
 #endif
 
-#if canImport(os)
-    import os.log
-#endif
-
 public
 class DukascopyDownloader {
     private let urlFactory: DukascopyURLFactory

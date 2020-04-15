@@ -12,10 +12,6 @@ import Foundation
     import FoundationNetworking
 #endif
 
-#if canImport(os)
-    import os.log
-#endif
-
 @available(OSX 10.11, *)
 class DukascopyProvider {
     enum ProviderError: Swift.Error {
