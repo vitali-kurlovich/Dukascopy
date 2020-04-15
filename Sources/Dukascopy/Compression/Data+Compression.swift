@@ -6,7 +6,11 @@
 //  Copyright © 2018 SIA Mystic Moments. All rights reserved.
 //
 
+
+#if canImport(Compression)
 import Compression
+#endif
+
 import Foundation
 
 extension Data {
