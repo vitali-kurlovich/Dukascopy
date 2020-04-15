@@ -177,12 +177,6 @@ extension DukascopyDownloader {
         }
     }
 
-    func request(for currency: String, date: Date) throws -> URLRequest {
-        let url = try urlFactory.url(for: currency, date: date)
-
-        return URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: timeout)
-    }
-
     func request(for currency: String, year: Int, month: Int, day: Int, hour: Int) throws -> URLRequest {
         let url = try urlFactory.url(for: currency, year: year, month: month, day: day, hour: hour)
 
