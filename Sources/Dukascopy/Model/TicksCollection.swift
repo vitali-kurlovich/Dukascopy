@@ -120,22 +120,6 @@ struct SliceTicksCollection: TicksSequence {
 
         return tick(date: date, first).date ..< tick(date: date, last).date
     }
-
-//    public var startDate: Date {
-//        guard let first = bloks.first else {
-//            return date
-//        }
-//
-//        return tick(date: date, first).date
-//    }
-//
-//    public var endDate: Date {
-//        guard let last = bloks.last else {
-//            return date
-//        }
-//
-//        return tick(date: date, last).date
-//    }
 }
 
 extension SliceTicksCollection: Equatable {}

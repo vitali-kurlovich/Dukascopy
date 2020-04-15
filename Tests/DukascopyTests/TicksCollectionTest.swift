@@ -86,6 +86,15 @@ final class TicksCollectionTest: XCTestCase {
 
         var collection = TicksCollection(date: date, ticks: ticks)
 
+        let ticksSliced: [DukascopyTick] = [
+            .init(time: 1012, askp: 12000, bidp: 12004, askv: 0.1, bidv: 0.1),
+            .init(time: 10120, askp: 12200, bidp: 12304, askv: 0.1, bidv: 0.1),
+            .init(time: 10540, askp: 12100, bidp: 12104, askv: 0.1, bidv: 0.1),
+        ]
+
+        let s = TicksCollection(date: date, ticks: ticksSliced)[1 ..< 2]
+        collection.append(s)
+
         let ticks_2: [DukascopyTick] = [
             .init(time: 13, askp: 12000, bidp: 12004, askv: 0.1, bidv: 0.1),
             .init(time: 127, askp: 12200, bidp: 12304, askv: 0.1, bidv: 0.1),
@@ -115,7 +124,7 @@ final class TicksCollectionTest: XCTestCase {
 
         XCTAssertEqualDate(collection.bounds.upperBound, accuracyFormatter.date(from: "04-04-2019 12:00:06.667")!)
 
-        XCTAssertEqual(collection.count, 7)
+        XCTAssertEqual(collection.count, 8)
     }
 
     static var allTests = [
