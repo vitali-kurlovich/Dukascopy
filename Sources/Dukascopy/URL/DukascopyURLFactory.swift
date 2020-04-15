@@ -21,11 +21,11 @@ final class DukascopyURLFactory {
         case invalidDateRange
     }
 
-    private let baseUrlTemplate: String
+    private let baseUrl: String
 
     public
-    init(_ baseUrlTemplate: String = "https://www.dukascopy.com/datafeed/%s/%d/%02d/%02d/%02dh_ticks.bi5") {
-        self.baseUrlTemplate = baseUrlTemplate
+    init(_ baseUrl: String = "https://www.dukascopy.com/datafeed") {
+        self.baseUrl = baseUrl
     }
 
     public
@@ -103,7 +103,9 @@ final class DukascopyURLFactory {
             throw FactoryError.invalidDate
         }
 
-        let baseUrl = String(format: baseUrlTemplate, currency, year, month - 1, day, hour)
+        let format = "\(baseUrl)/\(currency)/%d/%02d/%02d/%02dh_ticks.bi5"
+
+        let baseUrl = String(format: format, year, month - 1, day, hour)
 
         guard let url = URL(string: baseUrl) else {
             throw FactoryError.invalidURL
