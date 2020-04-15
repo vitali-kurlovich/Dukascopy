@@ -24,7 +24,7 @@ final class DukascopyURLFactory {
     private let baseUrlTemplate: String
 
     public
-    init(_ baseUrlTemplate: String = "https://www.dukascopy.com/datafeed/%@/%d/%02d/%02d/%02dh_ticks.bi5") {
+    init(_ baseUrlTemplate: String = "https://www.dukascopy.com/datafeed/%s/%d/%02d/%02d/%02dh_ticks.bi5") {
         self.baseUrlTemplate = baseUrlTemplate
     }
 
