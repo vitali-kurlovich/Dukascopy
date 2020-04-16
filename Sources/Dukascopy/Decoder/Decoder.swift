@@ -17,6 +17,10 @@ internal
 final class Decoder {
     @available(OSX 10.11, *)
     func decode(with data: Data, start: Date) throws -> TicksCollection {
+        if data.isEmpty {
+            return TicksCollection(date: start, ticks: [])
+        }
+
         guard let decompressed = data.decompress() else {
             throw DecoderError.decompressError
         }

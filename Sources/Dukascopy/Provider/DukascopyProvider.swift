@@ -29,28 +29,36 @@ class DukascopyProvider {
 extension DukascopyProvider {
     typealias TaskResult = Result<TicksCollection, Error>
 
-    func fetch(for currency: String, range: Range<Date>, completion: ((Result<[TaskResult], Error>) -> Void)? = nil) throws {
+    func fetch(for currency: String, range: Range<Date>, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
         try downloader.download(for: currency, range: range) { result in
             switch result {
             case let .success(result):
-                var chunks = [TaskResult]()
+
+                var ticks: TicksCollection?
 
                 for item in result {
                     switch item {
                     case let .success(duka):
                         do {
                             let chunk = try self.decode(duka.data, date: duka.time)
-                            chunks.append(.success(chunk))
+
+                            if ticks == nil {
+                                ticks = chunk
+                            } else {
+                                ticks?.append(chunk)
+                            }
+
                         } catch {
-                            chunks.append(.failure(error))
+                            completion?(.failure(error))
                         }
 
                     case let .failure(error):
-                        chunks.append(.failure(error))
+                        completion?(.failure(error))
+                        // chunks.append(.failure(error))
                     }
                 }
 
-                completion?(.success(chunks))
+                completion?(.success(ticks!))
 
             case let .failure(error):
                 completion?(.failure(error))

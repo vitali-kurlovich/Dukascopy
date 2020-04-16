@@ -49,6 +49,8 @@ class DukascopyDownloader {
             task.cancel()
         }
     }
+
+    private let dispatchQueue = DispatchQueue(label: "DukascopyDownloader.DispatchQueue")
 }
 
 public enum DownloaderError: Swift.Error {
@@ -77,14 +79,17 @@ extension DukascopyDownloader {
                     switch result {
                     case let .success(data):
 
-                        results.append(.success((data: data, time: date)))
-                        dispatchGroup.leave()
+                        dispatchQueue.async {
+                            results.append(.success((data: data, time: date)))
+                            dispatchGroup.leave()
+                        }
 
                     case let .failure(error):
 
-                        results.append(.failure(error))
-
-                        dispatchGroup.leave()
+                        dispatchQueue.async {
+                            results.append(.failure(error))
+                            dispatchGroup.leave()
+                        }
                     }
                 }
             } catch {

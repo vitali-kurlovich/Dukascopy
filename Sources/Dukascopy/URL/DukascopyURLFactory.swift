@@ -12,12 +12,10 @@ public
 final class DukascopyURLFactory {
     public
     enum FactoryError: Error {
-        case invalidURL
         case invalidCurrency
         case invalidMonth
         case invalidDay
         case invalidHour
-        case invalidDate
         case invalidDateRange
     }
 
@@ -93,25 +91,11 @@ final class DukascopyURLFactory {
         comps.day = day
         comps.month = month
 
-        guard let date = calendar.date(from: comps), date < Date() else {
-            throw FactoryError.invalidDate
-        }
-
-        let new = calendar.dateComponents([.year, .month, .day], from: date)
-
-        guard comps == new else {
-            throw FactoryError.invalidDate
-        }
-
         let format = "\(baseUrl)/\(currency)/%d/%02d/%02d/%02dh_ticks.bi5"
 
         let baseUrl = String(format: format, year, month - 1, day, hour)
 
-        guard let url = URL(string: baseUrl) else {
-            throw FactoryError.invalidURL
-        }
-
-        return url
+        return URL(string: baseUrl)!
     }
 }
 

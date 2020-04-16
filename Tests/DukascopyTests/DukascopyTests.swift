@@ -91,6 +91,6 @@ private let formatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.calendar = calendar
     formatter.timeZone = utc
-    formatter.dateFormat = "MM-dd-yyyy HH:mm"
+    formatter.dateFormat = "dd-MM-yyyy HH:mm"
     return formatter
 }()

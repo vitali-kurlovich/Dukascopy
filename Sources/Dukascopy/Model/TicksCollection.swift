@@ -73,7 +73,7 @@ extension TicksCollection {
 
 extension TicksCollection: Equatable {}
 
-extension TicksCollection: Collection {
+extension TicksCollection: BidirectionalCollection {
     public typealias Element = Tick
 
     public typealias Index = Int
@@ -124,7 +124,7 @@ struct SliceTicksCollection: TicksSequence {
 
 extension SliceTicksCollection: Equatable {}
 
-extension SliceTicksCollection: Collection {
+extension SliceTicksCollection: BidirectionalCollection {
     public typealias Element = Tick
 
     public typealias Index = Int
