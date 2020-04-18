@@ -8,8 +8,23 @@
 
 import Foundation
 
+/*
+ https://datafeed.dukascopy.com/datafeed/ACFREUR/2020/03/05/BID_candles_min_1.bi5
+ https://datafeed.dukascopy.com/datafeed/ACFREUR/2020/03/18/09h_ticks.bi5
+ */
+
 public
 final class DukascopyURLFactory {
+    public enum PriceType {
+        case ask
+        case bid
+    }
+
+    public enum Format {
+        case ticks
+        case candles(PriceType)
+    }
+
     public
     enum FactoryError: Error {
         case invalidCurrency
@@ -22,12 +37,14 @@ final class DukascopyURLFactory {
     private let baseUrl: String
 
     public
-    init(_ baseUrl: String = "https://www.dukascopy.com/datafeed") {
+    init(_ baseUrl: String = "https://datafeed.dukascopy.com/datafeed") {
         self.baseUrl = baseUrl
     }
+}
 
+extension DukascopyURLFactory {
     public
-    func url(for currency: String, range: Range<Date>) throws -> [(url: URL, date: Date)] {
+    func url(format: Format, for currency: String, range: Range<Date>) throws -> [(url: URL, date: Date)] {
         guard !currency.isEmpty else {
             throw FactoryError.invalidCurrency
         }
@@ -41,18 +58,31 @@ final class DukascopyURLFactory {
         }
 
         var urls = [(url: URL, date: Date)]()
-        let hour = DateComponents(hour: 1)
+
         var current = lower
 
-        if let url = try? url(for: currency, date: current) {
+        if let url = try? url(format: format, for: currency, date: current) {
             urls.append((url: url, date: current))
         }
 
-        while let next = calendar.date(byAdding: hour, to: current), next < upper {
-            current = next
+        switch format {
+        case .ticks:
+            let hour = DateComponents(hour: 1)
+            while let next = calendar.date(byAdding: hour, to: current), next < upper {
+                current = next
 
-            if let url = try? url(for: currency, date: current) {
-                urls.append((url: url, date: current))
+                if let url = try? url(format: format, for: currency, date: current) {
+                    urls.append((url: url, date: current))
+                }
+            }
+        case .candles:
+            let day = DateComponents(day: 1)
+            while let next = calendar.date(byAdding: day, to: current), next < upper {
+                current = next
+
+                if let url = try? url(format: format, for: currency, date: current) {
+                    urls.append((url: url, date: current))
+                }
             }
         }
 
@@ -60,14 +90,14 @@ final class DukascopyURLFactory {
     }
 
     public
-    func url(for currency: String, date: Date) throws -> URL {
+    func url(format: Format, for currency: String, date: Date) throws -> URL {
         let comps = calendar.dateComponents([.year, .month, .day, .hour], from: date)
 
-        return try url(for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!)
+        return try url(format: format, for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!)
     }
 
     public
-    func url(for currency: String, year: Int, month: Int, day: Int, hour: Int) throws -> URL {
+    func url(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int = 0) throws -> URL {
         guard (1 ... 12).contains(month) else {
             throw FactoryError.invalidMonth
         }
@@ -91,11 +121,25 @@ final class DukascopyURLFactory {
         comps.day = day
         comps.month = month
 
-        let format = "\(baseUrl)/\(currency)/%d/%02d/%02d/%02dh_ticks.bi5"
+        // "BID_candles_min_1"
 
-        let baseUrl = String(format: format, year, month - 1, day, hour)
+        switch format {
+        case .ticks:
+            let format = "\(baseUrl)/\(currency)/%d/%02d/%02d/%02dh_ticks.bi5"
+            let baseUrl = String(format: format, year, month - 1, day, hour)
+            return URL(string: baseUrl)!
+        case let .candles(type):
+            let format: String
+            switch type {
+            case .ask:
+                format = "\(baseUrl)/\(currency)/%d/%02d/%02d/ASK_candles_min_1.bi5"
+            case .bid:
+                format = "\(baseUrl)/\(currency)/%d/%02d/%02d/BID_candles_min_1.bi5"
+            }
 
-        return URL(string: baseUrl)!
+            let baseUrl = String(format: format, year, month - 1, day)
+            return URL(string: baseUrl)!
+        }
     }
 }
 

@@ -30,7 +30,7 @@ extension DukascopyProvider {
     typealias TaskResult = Result<TicksCollection, Error>
 
     func fetch(for currency: String, range: Range<Date>, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
-        try downloader.download(for: currency, range: range) { result in
+        try downloader.download(format: .ticks, for: currency, range: range) { result in
             switch result {
             case let .success(result):
 
@@ -73,7 +73,7 @@ extension DukascopyProvider {
     }
 
     func fetch(for currency: String, year: Int, month: Int, day: Int, hour: Int, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
-        try downloader.download(for: currency, year: year, month: month, day: day, hour: hour) { result in
+        try downloader.download(format: .ticks, for: currency, year: year, month: month, day: day, hour: hour) { result in
             switch result {
             case let .success((data, time)):
                 do {

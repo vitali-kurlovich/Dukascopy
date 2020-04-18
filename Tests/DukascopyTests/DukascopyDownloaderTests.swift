@@ -9,7 +9,7 @@ final class DukascopyTests: XCTestCase {
 
         let date = formatter.date(from: "04-04-2019 11:00")!
 
-        try? downloader.download(for: "EURUSD", date: date) { result in
+        try? downloader.download(format: .ticks, for: "EURUSD", date: date) { result in
 
             switch result {
             case let .success((data, time)):
@@ -32,7 +32,7 @@ final class DukascopyTests: XCTestCase {
 
         let date = formatter.date(from: "06-01-2019 12:00")!
 
-        try? downloader.download(for: "EURUSD", date: date) { result in
+        try? downloader.download(format: .ticks, for: "EURUSD", date: date) { result in
 
             switch result {
             case let .success((data, time)):
@@ -56,7 +56,7 @@ final class DukascopyTests: XCTestCase {
         let begin = formatter.date(from: "04-04-2019 11:00")!
         let end = formatter.date(from: "04-04-2019 19:00")!
 
-        try? downloader.download(for: "EURUSD", range: begin ..< end) { result in
+        try? downloader.download(format: .ticks, for: "EURUSD", range: begin ..< end) { result in
 
             switch result {
             case let .success(items):
@@ -72,10 +72,30 @@ final class DukascopyTests: XCTestCase {
         wait(for: [expectation], timeout: 10.0)
     }
 
+    func testDownloadInfoData() {
+        let expectation = XCTestExpectation(description: "Fetch instruments list")
+        let downloader = DukascopyDownloader()
+
+        try? downloader.downloadInfo { result in
+            switch result {
+            case let .success(data):
+                XCTAssertFalse(data.isEmpty)
+
+            case .failure:
+                XCTFail("wrong error")
+            }
+
+            expectation.fulfill()
+        }
+
+        wait(for: [expectation], timeout: 10.0)
+    }
+
     static var allTests = [
         ("testDownloadData", testDownloadData),
         ("testDownloadData_1", testDownloadData_1),
         ("testDownloadData_2", testDownloadData_2),
+        ("testDownloadInfoData", testDownloadInfoData),
     ]
 }
 

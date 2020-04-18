@@ -14,6 +14,8 @@ import Foundation
 
 public
 class DukascopyDownloader {
+    public typealias Format = DukascopyURLFactory.Format
+
     private let urlFactory: DukascopyURLFactory
 
     private let cachePolicy: URLRequest.CachePolicy
@@ -58,12 +60,12 @@ public enum DownloaderError: Swift.Error {
 }
 
 extension DukascopyDownloader {
-    public func download(for currency: String, range: Range<Date>,
+    public func download(format: Format, for currency: String, range: Range<Date>,
                          dispatchQueue: DispatchQueue = DispatchQueue.main,
                          completion: @escaping ((Result<[Result<(data: Data, time: Date), Error>], Error>) -> Void)) throws {
         var results = [Result<(data: Data, time: Date), Error>]()
 
-        let requests = try request(for: currency, range: range)
+        let requests = try request(format: format, for: currency, range: range)
         results.reserveCapacity(requests.underestimatedCount)
 
         let dispatchGroup = DispatchGroup()
@@ -113,14 +115,14 @@ extension DukascopyDownloader {
 }
 
 extension DukascopyDownloader {
-    public func download(for currency: String, date: Date, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
+    public func download(format: Format, for currency: String, date: Date, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
         let comps = calendar.dateComponents([.year, .month, .day, .hour], from: date)
 
-        try download(for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!, completion: completion)
+        try download(format: format, for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!, completion: completion)
     }
 
-    public func download(for currency: String, year: Int, month: Int, day: Int, hour: Int, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
-        let request = try self.request(for: currency, year: year, month: month, day: day, hour: hour)
+    public func download(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
+        let request = try self.request(format: format, for: currency, year: year, month: month, day: day, hour: hour)
 
         let components = DateComponents(year: year, month: month, day: day, hour: hour)
 
@@ -138,6 +140,14 @@ extension DukascopyDownloader {
                 completion(.failure(error))
             }
         }
+    }
+}
+
+extension DukascopyDownloader {
+    internal
+    func downloadInfo(completion: @escaping ((Result<Data, Error>) -> Void)) throws {
+        let request = infoRequest()
+        try download(for: request, completion: completion)
     }
 }
 
@@ -172,8 +182,8 @@ extension DukascopyDownloader {
 
 private
 extension DukascopyDownloader {
-    func request(for currency: String, range: Range<Date>) throws -> [(request: URLRequest, date: Date)] {
-        let urls = try urlFactory.url(for: currency, range: range)
+    func request(format: Format, for currency: String, range: Range<Date>) throws -> [(request: URLRequest, date: Date)] {
+        let urls = try urlFactory.url(format: format, for: currency, range: range)
 
         return urls.compactMap { (data) -> (request: URLRequest, date: Date)? in
             let request = URLRequest(url: data.url, cachePolicy: cachePolicy, timeoutInterval: timeout)
@@ -182,9 +192,21 @@ extension DukascopyDownloader {
         }
     }
 
-    func request(for currency: String, year: Int, month: Int, day: Int, hour: Int) throws -> URLRequest {
-        let url = try urlFactory.url(for: currency, year: year, month: month, day: day, hour: hour)
+    func request(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int) throws -> URLRequest {
+        let url = try urlFactory.url(format: format, for: currency, year: year, month: month, day: day, hour: hour)
 
         return URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: timeout)
+    }
+
+    func infoRequest() -> URLRequest {
+        let base = "https://freeserv.dukascopy.com/2.0/index.php?path=common%2Finstruments&json"
+        let url = URL(string: base)!
+
+        var request = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: timeout)
+
+        request.setValue("freeserv.dukascopy.com", forHTTPHeaderField: "Authority")
+        request.setValue("https://freeserv.dukascopy.com/", forHTTPHeaderField: "Referer")
+
+        return request
     }
 }
