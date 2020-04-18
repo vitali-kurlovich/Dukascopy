@@ -111,6 +111,7 @@ final class DukascopyURLFactoryTests: XCTestCase {
 
     static var allTests = [
         ("testURLFactory", testURLFactory),
+        ("testURLFactoryCandles", testURLFactoryCandles),
         ("testURLFactoryErrors", testURLFactoryErrors),
     ]
 }

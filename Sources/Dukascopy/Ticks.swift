@@ -29,3 +29,17 @@ struct Volume: Equatable {
 public protocol TicksSequence: Sequence where Self.Element == Tick {
     var bounds: Range<Date> { get }
 }
+
+public
+struct Candle {
+    public let period: Range<Date>
+    public let open: Price
+    public let close: Price
+    public let high: Price
+    public let low: Price
+    public let volume: Volume
+}
+
+public protocol CandlesSequence: Sequence where Self.Element == Candle {
+    var bounds: Range<Date> { get }
+}
