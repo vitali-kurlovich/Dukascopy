@@ -7,6 +7,8 @@
 
 import Foundation
 
+// CandlesDecoder
+
 public
 struct TicksCollection: TicksSequence {
     internal let date: Date

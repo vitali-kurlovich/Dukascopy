@@ -17,7 +17,7 @@ class DukascopyProviderTests: XCTestCase {
 
         let date = formatter.date(from: "01-01-2020 22:00")!
 
-        try? provider.fetch(for: "EURUSD", date: date, completion: { result in
+        try? provider.fetchTicks(for: "EURUSD", date: date, completion: { result in
 
             switch result {
             case let .success(ticks):
@@ -70,7 +70,7 @@ class DukascopyProviderTests: XCTestCase {
 
         let range = begin ..< end
 
-        try? provider.fetch(for: "EURUSD", range: range, completion: { result in
+        try? provider.fetchTicks(for: "EURUSD", range: range, completion: { result in
 
             switch result {
             case let .success(ticks):
@@ -104,6 +104,29 @@ class DukascopyProviderTests: XCTestCase {
 
             expectation.fulfill()
         })
+        wait(for: [expectation], timeout: 10.0)
+    }
+
+    func testDownloadCandles() throws {
+        let expectation = XCTestExpectation(description: "Download Dukacopy bi5 file")
+
+        let provider = DukascopyProvider()
+
+        let date = formatter.date(from: "01-01-2020 22:00")!
+
+        try? provider.fetchCandles(for: "EURUSD", date: date, completion: { result in
+
+            switch result {
+            case let .success(candles):
+
+                XCTAssertEqual(candles.count, 24 * 60)
+
+            case .failure:
+                XCTFail("wrong error")
+            }
+            expectation.fulfill()
+        })
+
         wait(for: [expectation], timeout: 10.0)
     }
 }

@@ -121,7 +121,7 @@ extension DukascopyDownloader {
         try download(format: format, for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!, completion: completion)
     }
 
-    public func download(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
+    public func download(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int = 0, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
         let request = try self.request(format: format, for: currency, year: year, month: month, day: day, hour: hour)
 
         let components = DateComponents(year: year, month: month, day: day, hour: hour)

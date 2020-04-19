@@ -22,14 +22,70 @@ class DukascopyProvider {
 
     private let downloader = DukascopyDownloader()
 
-    private let decoder = Decoder()
+    private let ticksDecoder = TicksDecoder()
+    private let candlesDecoder = CandlesDecoder()
 }
 
 @available(OSX 10.11, *)
 extension DukascopyProvider {
-    typealias TaskResult = Result<TicksCollection, Error>
+    func fetchCandles(for currency: String, range: Range<Date>, completion: ((Result<CandlesCollection, Error>) -> Void)? = nil) throws {
+        try downloader.download(format: .candles(.ask), for: currency, range: range) { result in
+            switch result {
+            case let .success(result):
 
-    func fetch(for currency: String, range: Range<Date>, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
+                break
+
+            case let .failure(error):
+                completion?(.failure(error))
+            }
+        }
+    }
+
+    public
+    func fetchCandles(for currency: String, date: Date, completion: ((Result<CandlesCollection, Error>) -> Void)? = nil) throws {
+        let comps = calendar.dateComponents([.year, .month, .day], from: date)
+
+        try fetchCandles(for: currency, year: comps.year!, month: comps.month!, day: comps.day!, completion: completion)
+    }
+
+    public
+    func fetchCandles(for currency: String, year: Int, month: Int, day: Int, completion: ((Result<CandlesCollection, Error>) -> Void)? = nil) throws {
+        try fetchCandles(type: .ask, for: currency, year: year, month: month, day: day) { result in
+            switch result {
+            case let .success(ask):
+                if ask.candles.isEmpty {
+                    completion?(.success(.init(date: ask.date, candles: [], period: TimeInterval(60))))
+                    return
+                }
+
+                do {
+                    try self.fetchCandles(type: .bid, for: currency, year: year, month: month, day: day) { result in
+
+                        switch result {
+                        case let .success(bid):
+                            let collection = self.candlesCollection(ask: ask, bid: bid, period: TimeInterval(60))
+
+                            completion?(.success(collection))
+
+                        case let .failure(error):
+                            completion?(.failure(error))
+                        }
+                    }
+
+                } catch {
+                    completion?(.failure(error))
+                }
+
+            case let .failure(error):
+                completion?(.failure(error))
+            }
+        }
+    }
+}
+
+@available(OSX 10.11, *)
+extension DukascopyProvider {
+    func fetchTicks(for currency: String, range: Range<Date>, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
         try downloader.download(format: .ticks, for: currency, range: range) { result in
             switch result {
             case let .success(result):
@@ -40,7 +96,7 @@ extension DukascopyProvider {
                     switch item {
                     case let .success(duka):
                         do {
-                            let chunk = try self.decode(duka.data, date: duka.time)
+                            let chunk = try self.decodeTicks(duka.data, date: duka.time)
 
                             if ticks == nil {
                                 ticks = chunk
@@ -54,7 +110,6 @@ extension DukascopyProvider {
 
                     case let .failure(error):
                         completion?(.failure(error))
-                        // chunks.append(.failure(error))
                     }
                 }
 
@@ -66,18 +121,18 @@ extension DukascopyProvider {
         }
     }
 
-    func fetch(for currency: String, date: Date, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
+    func fetchTicks(for currency: String, date: Date, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
         let comps = calendar.dateComponents([.year, .month, .day, .hour], from: date)
 
-        try fetch(for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!, completion: completion)
+        try fetchTicks(for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!, completion: completion)
     }
 
-    func fetch(for currency: String, year: Int, month: Int, day: Int, hour: Int, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
+    func fetchTicks(for currency: String, year: Int, month: Int, day: Int, hour: Int, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
         try downloader.download(format: .ticks, for: currency, year: year, month: month, day: day, hour: hour) { result in
             switch result {
             case let .success((data, time)):
                 do {
-                    let chunks = try self.decode(data, date: time)
+                    let chunks = try self.decodeTicks(data, date: time)
                     completion?(.success(chunks))
                 } catch {
                     completion?(.failure(error))
@@ -86,6 +141,101 @@ extension DukascopyProvider {
                 completion?(.failure(error))
             }
         }
+    }
+}
+
+@available(OSX 10.11, *)
+extension DukascopyProvider {
+    private typealias CandelsType = CandlesDecoder.CandelsType
+
+    private
+    func fetchCandles(type: CandelsType, for currency: String, year: Int, month: Int, day: Int, completion: ((Result<DukascopyCandlesCollection, Error>) -> Void)? = nil) throws {
+        try downloader.download(format: .candles(type == .ask ? .ask : .bid), for: currency, year: year, month: month, day: day) { result in
+            switch result {
+            case let .success((data, time)):
+                do {
+                    let chunks = try self.decodeCandles(data, date: time, type: type)
+                    completion?(.success(chunks))
+                } catch {
+                    completion?(.failure(error))
+                }
+            case let .failure(error):
+                completion?(.failure(error))
+            }
+        }
+    }
+
+    private
+    func fetchCandles(type: CandelsType, for currency: String, range: Range<Date>, completion: ((Result<[DukascopyCandlesCollection], Error>) -> Void)? = nil) throws {
+        try downloader.download(format: .candles(type == .ask ? .ask : .bid), for: currency, range: range) { result in
+            switch result {
+            case let .success(items):
+
+                do {
+                    let candles = try items.compactMap { (result) -> DukascopyCandlesCollection? in
+                        switch result {
+                        case let .success((data, time)):
+                            return try self.decodeCandles(data, date: time, type: type)
+
+                        case let .failure(error):
+                            throw error
+                        }
+                    }
+
+                    completion?(.success(candles))
+                } catch {
+                    completion?(.failure(error))
+                }
+
+            case let .failure(error):
+                completion?(.failure(error))
+            }
+        }
+    }
+
+    private
+    func candlesCollection(ask: DukascopyCandlesCollection,
+                           bid: DukascopyCandlesCollection,
+                           period: TimeInterval = TimeInterval(60)) -> CandlesCollection {
+        let date = ask.date
+
+        if ask.candles.isEmpty {
+            return .init(date: date, candles: [], period: period)
+        }
+
+        var askIterator = ask.candles.makeIterator()
+        var bidIterator = bid.candles.makeIterator()
+
+        var askCandle = askIterator.next()
+        var bidCandle = bidIterator.next()
+
+        var candles = [DukascopyBidAskCandle]()
+        candles.reserveCapacity(ask.candles.underestimatedCount)
+
+        while let ask = askIterator.next() {
+            let bid = bidIterator.next()!
+
+            candles.append(
+                .init(time: askCandle!.time,
+                      askPrice: askCandle!.price,
+                      bidPrice: bidCandle!.price,
+                      askVolume: askCandle!.volume,
+                      bidVolume: bidCandle!.volume))
+
+            askCandle = ask
+            bidCandle = bid
+        }
+
+        candles.append(
+            .init(time: askCandle!.time,
+                  askPrice: askCandle!.price,
+                  bidPrice: bidCandle!.price,
+                  askVolume: askCandle!.volume,
+                  bidVolume: bidCandle!.volume))
+
+        return .init(date: date,
+                     candles: candles,
+                     period: period)
     }
 }
 
@@ -100,14 +250,29 @@ private let calendar: Calendar = {
 @available(OSX 10.11, *)
 extension DukascopyProvider {
     private
-    func decode(_ data: Data, date: Date) throws -> TicksCollection {
-        try decoder.decode(with: data, start: date)
+    func decodeTicks(_ data: Data, date: Date) throws -> TicksCollection {
+        try ticksDecoder.decode(with: data, start: date)
     }
 
     private
-    func decode(_ fileURL: URL, date: Date) throws -> TicksCollection {
+    func decodeTicks(_ fileURL: URL, date: Date) throws -> TicksCollection {
         let data = try Data(contentsOf: fileURL)
 
-        return try decode(data, date: date)
+        return try decodeTicks(data, date: date)
+    }
+}
+
+@available(OSX 10.11, *)
+extension DukascopyProvider {
+    private
+    func decodeCandles(_ data: Data, date: Date, type: CandlesDecoder.CandelsType) throws -> DukascopyCandlesCollection {
+        try candlesDecoder.decode(with: data, start: date, type: type)
+    }
+
+    private
+    func decodeCandles(_ fileURL: URL, date: Date, type: CandlesDecoder.CandelsType) throws -> DukascopyCandlesCollection {
+        let data = try Data(contentsOf: fileURL)
+
+        return try decodeCandles(data, date: date, type: type)
     }
 }

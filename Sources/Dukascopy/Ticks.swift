@@ -31,7 +31,7 @@ public protocol TicksSequence: Sequence where Self.Element == Tick {
 }
 
 public
-struct Candle {
+struct Candle: Equatable {
     public let period: Range<Date>
     public let open: Price
     public let close: Price

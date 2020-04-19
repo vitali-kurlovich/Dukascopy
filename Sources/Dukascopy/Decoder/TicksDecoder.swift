@@ -14,7 +14,7 @@ enum DecoderError: Error {
 }
 
 internal
-final class Decoder {
+final class TicksDecoder {
     @available(OSX 10.11, *)
     func decode(with data: Data, start: Date) throws -> TicksCollection {
         if data.isEmpty {

@@ -6,6 +6,7 @@ import XCTest
             testCase(DukascopyTests.allTests),
             testCase(DukascopyURLFactoryTests.allTests),
             testCase(TicksCollectionTest.allTests),
+            testCase(DukascopyCandlesCollectionTest.allTests),
         ]
     }
 #endif
