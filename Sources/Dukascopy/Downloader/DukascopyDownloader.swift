@@ -6,8 +6,8 @@
 //  Copyright © 2020 Vitali Kurlovich. All rights reserved.
 //
 
-import Foundation
 import DukascopyURL
+import Foundation
 #if canImport(FoundationNetworking)
     import FoundationNetworking
 #endif
@@ -24,7 +24,8 @@ class DukascopyDownloader {
     public init(_ urlFactory: URLFactory = URLFactory(),
                 session: URLSession = URLSession(configuration: .default),
                 cachePolicy: URLRequest.CachePolicy = .returnCacheDataElseLoad,
-                timeout: TimeInterval = TimeInterval(15)) {
+                timeout: TimeInterval = TimeInterval(15))
+    {
         self.cachePolicy = cachePolicy
         self.timeout = timeout
 
@@ -62,7 +63,8 @@ public enum DownloaderError: Swift.Error {
 extension DukascopyDownloader {
     public func download(format: Format, for currency: String, range: Range<Date>,
                          dispatchQueue: DispatchQueue = DispatchQueue.main,
-                         completion: @escaping ((Result<[Result<(data: Data, range: Range<Date>), Error>], Error>) -> Void)) throws {
+                         completion: @escaping ((Result<[Result<(data: Data, range: Range<Date>), Error>], Error>) -> Void)) throws
+    {
         var results = [Result<(data: Data, range: Range<Date>), Error>]()
 
         let requests = try request(format: format, for: currency, range: range)
@@ -72,7 +74,7 @@ extension DukascopyDownloader {
 
         for current in requests {
             let request = current.request
-            //let date = current.range
+            // let date = current.range
 
             do {
                 dispatchGroup.enter()
@@ -103,7 +105,8 @@ extension DukascopyDownloader {
         dispatchGroup.notify(queue: dispatchQueue) {
             results.sort { (left, right) -> Bool in
                 guard let left = try? left.get(),
-                    let right = try? right.get() else {
+                    let right = try? right.get()
+                else {
                     return false
                 }
 
@@ -132,15 +135,14 @@ extension DukascopyDownloader {
 
         let baseDate = calendar.date(from: components)!
 
-        let range :  Range<Date>
-    
+        let range: Range<Date>
+
         switch format {
-       
         default:
-            let end = baseDate.addingTimeInterval(60*60) 
+            let end = baseDate.addingTimeInterval(60 * 60)
             range = baseDate ..< end
         }
-        
+
         try download(for: request) { result in
             switch result {
             case let .success(data):

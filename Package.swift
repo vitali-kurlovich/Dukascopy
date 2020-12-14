@@ -24,13 +24,13 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Dukascopy",
-            dependencies: [ "DukascopyURL", "Logging"]
+            dependencies: ["DukascopyURL", "Logging"]
         ),
         .testTarget(
             name: "DukascopyTests",
             dependencies: [
                 "Dukascopy",
-                "Logging"
+                "Logging",
             ]
         ),
     ]

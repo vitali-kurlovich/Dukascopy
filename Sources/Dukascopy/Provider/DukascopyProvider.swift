@@ -6,8 +6,8 @@
 //  Copyright © 2020 Vitali Kurlovich. All rights reserved.
 //
 
-import Foundation
 import DukascopyURL
+import Foundation
 
 #if canImport(FoundationNetworking)
     import FoundationNetworking
@@ -225,7 +225,8 @@ extension DukascopyProvider {
     private
     func candlesCollection(ask: DukascopyCandlesCollection,
                            bid: DukascopyCandlesCollection,
-                           period: TimeInterval = TimeInterval(60)) -> CandlesCollection {
+                           period: TimeInterval = TimeInterval(60)) -> CandlesCollection
+    {
         let date = ask.date
 
         if ask.candles.isEmpty {
