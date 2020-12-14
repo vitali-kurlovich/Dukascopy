@@ -78,7 +78,10 @@ class DukascopyProviderTests: XCTestCase {
 
                 // 01.01.2020 22:01:12.821,1.1216000000000002,1.1210600000000002,0.0937,0.75
 
-                let first = ticks.first!
+                guard let first = ticks.first else {
+                    XCTFail("ticks.first == nil")
+                    return
+                }
 
                 XCTAssertEqual(first.price, Price(ask: 112_160, bid: 112_106))
 
@@ -120,6 +123,30 @@ class DukascopyProviderTests: XCTestCase {
             case let .success(candles):
 
                 XCTAssertEqual(candles.count, 24 * 60)
+
+            case .failure:
+                XCTFail("wrong error")
+            }
+            expectation.fulfill()
+        })
+
+        wait(for: [expectation], timeout: 10.0)
+    }
+
+    func testDownloadCandles_1() throws {
+        let expectation = XCTestExpectation(description: "Download Dukacopy bi5 file")
+
+        let provider = DukascopyProvider()
+
+        let begin = formatter.date(from: "01-01-2020 00:00")!
+        let end = formatter.date(from: "04-01-2020 00:00")!
+
+        try? provider.fetchCandles(for: "EURUSD", range: begin ..< end, completion: { result in
+
+            switch result {
+            case let .success(candles):
+
+                XCTAssertEqual(candles.count, 3 * 24 * 60)
 
             case .failure:
                 XCTFail("wrong error")

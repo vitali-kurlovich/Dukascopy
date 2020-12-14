@@ -7,21 +7,21 @@
 //
 
 import Foundation
-
+import DukascopyURL
 #if canImport(FoundationNetworking)
     import FoundationNetworking
 #endif
 
 public
 class DukascopyDownloader {
-    public typealias Format = DukascopyURLFactory.Format
+    public typealias Format = URLFactory.Format
 
-    private let urlFactory: DukascopyURLFactory
+    private let urlFactory: URLFactory
 
     private let cachePolicy: URLRequest.CachePolicy
     private let timeout: TimeInterval
 
-    public init(_ urlFactory: DukascopyURLFactory = DukascopyURLFactory(),
+    public init(_ urlFactory: URLFactory = URLFactory(),
                 session: URLSession = URLSession(configuration: .default),
                 cachePolicy: URLRequest.CachePolicy = .returnCacheDataElseLoad,
                 timeout: TimeInterval = TimeInterval(15)) {
@@ -62,8 +62,8 @@ public enum DownloaderError: Swift.Error {
 extension DukascopyDownloader {
     public func download(format: Format, for currency: String, range: Range<Date>,
                          dispatchQueue: DispatchQueue = DispatchQueue.main,
-                         completion: @escaping ((Result<[Result<(data: Data, time: Date), Error>], Error>) -> Void)) throws {
-        var results = [Result<(data: Data, time: Date), Error>]()
+                         completion: @escaping ((Result<[Result<(data: Data, range: Range<Date>), Error>], Error>) -> Void)) throws {
+        var results = [Result<(data: Data, range: Range<Date>), Error>]()
 
         let requests = try request(format: format, for: currency, range: range)
         results.reserveCapacity(requests.underestimatedCount)
@@ -72,7 +72,7 @@ extension DukascopyDownloader {
 
         for current in requests {
             let request = current.request
-            let date = current.date
+            //let date = current.range
 
             do {
                 dispatchGroup.enter()
@@ -82,7 +82,8 @@ extension DukascopyDownloader {
                     case let .success(data):
 
                         dispatchQueue.async {
-                            results.append(.success((data: data, time: date)))
+                            let range = current.range
+                            results.append(.success((data: data, range: range)))
                             dispatchGroup.leave()
                         }
 
@@ -106,7 +107,7 @@ extension DukascopyDownloader {
                     return false
                 }
 
-                return left.time < right.time
+                return left.range.lowerBound < right.range.lowerBound
             }
 
             completion(.success(results))
@@ -114,25 +115,37 @@ extension DukascopyDownloader {
     }
 }
 
+import Logging
+private let logger = Logger(label: "Dukascopy.net")
+
 extension DukascopyDownloader {
-    public func download(format: Format, for currency: String, date: Date, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
+    public func download(format: Format, for currency: String, date: Date, completion: @escaping ((Result<(data: Data, range: Range<Date>), Error>) -> Void)) throws {
         let comps = calendar.dateComponents([.year, .month, .day, .hour], from: date)
 
         try download(format: format, for: currency, year: comps.year!, month: comps.month!, day: comps.day!, hour: comps.hour!, completion: completion)
     }
 
-    public func download(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int = 0, completion: @escaping ((Result<(data: Data, time: Date), Error>) -> Void)) throws {
+    public func download(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int = 0, completion: @escaping ((Result<(data: Data, range: Range<Date>), Error>) -> Void)) throws {
         let request = try self.request(format: format, for: currency, year: year, month: month, day: day, hour: hour)
 
         let components = DateComponents(year: year, month: month, day: day, hour: hour)
 
         let baseDate = calendar.date(from: components)!
 
+        let range :  Range<Date>
+    
+        switch format {
+       
+        default:
+            let end = baseDate.addingTimeInterval(60*60) 
+            range = baseDate ..< end
+        }
+        
         try download(for: request) { result in
             switch result {
             case let .success(data):
 
-                let result = (data: data, time: baseDate)
+                let result = (data: data, range: range)
 
                 completion(.success(result))
 
@@ -182,13 +195,12 @@ extension DukascopyDownloader {
 
 private
 extension DukascopyDownloader {
-    func request(format: Format, for currency: String, range: Range<Date>) throws -> [(request: URLRequest, date: Date)] {
+    func request(format: Format, for currency: String, range: Range<Date>) throws -> [(request: URLRequest, range: Range<Date>)] {
         let urls = try urlFactory.url(format: format, for: currency, range: range)
 
-        return urls.compactMap { (data) -> (request: URLRequest, date: Date)? in
+        return urls.compactMap { (data) -> (request: URLRequest, range: Range<Date>)? in
             let request = URLRequest(url: data.url, cachePolicy: cachePolicy, timeoutInterval: timeout)
-            let date = data.date
-            return (request: request, date: date)
+            return (request: request, range: data.range)
         }
     }
 

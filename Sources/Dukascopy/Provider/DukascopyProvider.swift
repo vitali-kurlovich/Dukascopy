@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import DukascopyURL
 
 #if canImport(FoundationNetworking)
     import FoundationNetworking
@@ -18,7 +19,7 @@ class DukascopyProvider {
         case invalidData
     }
 
-    private let urlFactory = DukascopyURLFactory()
+    private let urlFactory = URLFactory()
 
     private let downloader = DukascopyDownloader()
 
@@ -28,12 +29,33 @@ class DukascopyProvider {
 
 @available(OSX 10.11, *)
 extension DukascopyProvider {
+    public
     func fetchCandles(for currency: String, range: Range<Date>, completion: ((Result<CandlesCollection, Error>) -> Void)? = nil) throws {
-        try downloader.download(format: .candles(.ask), for: currency, range: range) { result in
+        try fetchCandles(type: .ask, for: currency, range: range) { result in
             switch result {
-            case let .success(result):
+            case let .success(ask):
+                if ask.candles.isEmpty {
+                    completion?(.success(.init(date: ask.date, candles: [], period: TimeInterval(60))))
+                    return
+                }
 
-                break
+                do {
+                    try self.fetchCandles(type: .bid, for: currency, range: range) { result in
+
+                        switch result {
+                        case let .success(bid):
+                            let collection = self.candlesCollection(ask: ask, bid: bid, period: TimeInterval(60))
+
+                            completion?(.success(collection))
+
+                        case let .failure(error):
+                            completion?(.failure(error))
+                        }
+                    }
+
+                } catch {
+                    completion?(.failure(error))
+                }
 
             case let .failure(error):
                 completion?(.failure(error))
@@ -96,7 +118,7 @@ extension DukascopyProvider {
                     switch item {
                     case let .success(duka):
                         do {
-                            let chunk = try self.decodeTicks(duka.data, date: duka.time)
+                            let chunk = try self.decodeTicks(duka.data, range: duka.range)
 
                             if ticks == nil {
                                 ticks = chunk
@@ -130,9 +152,9 @@ extension DukascopyProvider {
     func fetchTicks(for currency: String, year: Int, month: Int, day: Int, hour: Int, completion: ((Result<TicksCollection, Error>) -> Void)? = nil) throws {
         try downloader.download(format: .ticks, for: currency, year: year, month: month, day: day, hour: hour) { result in
             switch result {
-            case let .success((data, time)):
+            case let .success((data, range)):
                 do {
-                    let chunks = try self.decodeTicks(data, date: time)
+                    let chunks = try self.decodeTicks(data, range: range)
                     completion?(.success(chunks))
                 } catch {
                     completion?(.failure(error))
@@ -152,9 +174,10 @@ extension DukascopyProvider {
     func fetchCandles(type: CandelsType, for currency: String, year: Int, month: Int, day: Int, completion: ((Result<DukascopyCandlesCollection, Error>) -> Void)? = nil) throws {
         try downloader.download(format: .candles(type == .ask ? .ask : .bid), for: currency, year: year, month: month, day: day) { result in
             switch result {
-            case let .success((data, time)):
+            case let .success((data, range)):
                 do {
-                    let chunks = try self.decodeCandles(data, date: time, type: type)
+                    let chunks = try self.decodeCandles(data, date: range.lowerBound, type: type)
+
                     completion?(.success(chunks))
                 } catch {
                     completion?(.failure(error))
@@ -166,7 +189,7 @@ extension DukascopyProvider {
     }
 
     private
-    func fetchCandles(type: CandelsType, for currency: String, range: Range<Date>, completion: ((Result<[DukascopyCandlesCollection], Error>) -> Void)? = nil) throws {
+    func fetchCandles(type: CandelsType, for currency: String, range: Range<Date>, completion: ((Result<DukascopyCandlesCollection, Error>) -> Void)? = nil) throws {
         try downloader.download(format: .candles(type == .ask ? .ask : .bid), for: currency, range: range) { result in
             switch result {
             case let .success(items):
@@ -174,15 +197,21 @@ extension DukascopyProvider {
                 do {
                     let candles = try items.compactMap { (result) -> DukascopyCandlesCollection? in
                         switch result {
-                        case let .success((data, time)):
-                            return try self.decodeCandles(data, date: time, type: type)
+                        case let .success((data, range)):
+                            return try self.decodeCandles(data, date: range.lowerBound, type: type)
 
                         case let .failure(error):
                             throw error
                         }
                     }
 
-                    completion?(.success(candles))
+                    var result = candles.first!
+
+                    for item in candles.dropFirst() {
+                        result.append(item)
+                    }
+
+                    completion?(.success(result))
                 } catch {
                     completion?(.failure(error))
                 }
@@ -250,15 +279,15 @@ private let calendar: Calendar = {
 @available(OSX 10.11, *)
 extension DukascopyProvider {
     private
-    func decodeTicks(_ data: Data, date: Date) throws -> TicksCollection {
-        try ticksDecoder.decode(with: data, start: date)
+    func decodeTicks(_ data: Data, range: Range<Date>) throws -> TicksCollection {
+        try ticksDecoder.decode(with: data, range: range)
     }
 
     private
-    func decodeTicks(_ fileURL: URL, date: Date) throws -> TicksCollection {
+    func decodeTicks(_ fileURL: URL, range: Range<Date>) throws -> TicksCollection {
         let data = try Data(contentsOf: fileURL)
 
-        return try decodeTicks(data, date: date)
+        return try decodeTicks(data, range: range)
     }
 }
 

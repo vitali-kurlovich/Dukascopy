@@ -12,8 +12,8 @@ final class DukascopyTests: XCTestCase {
         try? downloader.download(format: .ticks, for: "EURUSD", date: date) { result in
 
             switch result {
-            case let .success((data, time)):
-                XCTAssertEqual(time, date)
+            case let .success((data, range)):
+                XCTAssertEqual(range, date ..< formatter.date(from: "04-04-2019 12:00")!)
                 XCTAssertEqual(data.count, 50435)
             case .failure:
                 XCTFail("wrong error")
@@ -35,8 +35,8 @@ final class DukascopyTests: XCTestCase {
         try? downloader.download(format: .ticks, for: "EURUSD", date: date) { result in
 
             switch result {
-            case let .success((data, time)):
-                XCTAssertEqual(time, date)
+            case let .success((data, range)):
+                XCTAssertEqual(range, date ..< formatter.date(from: "06-01-2019 13:00")!)
                 XCTAssertTrue(data.isEmpty)
             case .failure:
                 XCTFail("wrong error")

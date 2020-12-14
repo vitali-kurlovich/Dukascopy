@@ -11,13 +11,15 @@ import Foundation
 
 public
 struct TicksCollection: TicksSequence {
-    internal let date: Date
+    public let range: Range<Date>
     internal var ticks: [DukascopyTick]
 
     public var bounds: Range<Date> {
         guard let first = ticks.first, let last = ticks.last else {
-            return date ..< date
+            return range.lowerBound ..< range.lowerBound
         }
+
+        let date = range.lowerBound
 
         return tick(date: date, first).date ..< tick(date: date, last).date
     }
@@ -36,7 +38,7 @@ extension TicksCollection {
 
     internal mutating
     func append(_ collection: TicksCollection) {
-        let delta = collection.date.timeIntervalSince(date)
+        let delta = collection.range.lowerBound.timeIntervalSince(range.lowerBound)
 
         let increment = Int32(round(delta * 1000))
 
@@ -55,7 +57,7 @@ extension TicksCollection {
 
     internal mutating
     func append(_ collection: SliceTicksCollection) {
-        let delta = collection.date.timeIntervalSince(date)
+        let delta = collection.range.lowerBound.timeIntervalSince(range.lowerBound)
 
         let increment = Int32(round(delta * 1000))
 
@@ -84,13 +86,15 @@ extension TicksCollection: BidirectionalCollection {
 
     public subscript(position: Int) -> Self.Element {
         let block = ticks[position]
+        let date = range.lowerBound
         return tick(date: date, block)
     }
 
     public subscript(bounds: Range<Self.Index>) -> Self.SubSequence {
-        let date = self.date
+        // let date = range.lowerBound
         let slice = ticks[bounds]
-        return SubSequence(date: date, ticks: slice)
+
+        return SubSequence(range: range, ticks: slice)
     }
 
     public func index(before i: Int) -> Int {
@@ -112,15 +116,15 @@ extension TicksCollection: BidirectionalCollection {
 
 public
 struct SliceTicksCollection: TicksSequence {
-    internal let date: Date
+    public let range: Range<Date>
     internal let ticks: ArraySlice<DukascopyTick>
 
     public var bounds: Range<Date> {
         guard let first = ticks.first, let last = ticks.last else {
-            return date ..< date
+            return range.lowerBound ..< range.lowerBound
         }
 
-        return tick(date: date, first).date ..< tick(date: date, last).date
+        return tick(date: range.lowerBound, first).date ..< tick(date: range.lowerBound, last).date
     }
 }
 
@@ -135,13 +139,12 @@ extension SliceTicksCollection: BidirectionalCollection {
 
     public subscript(position: Int) -> Self.Element {
         let item = ticks[position]
-        return tick(date: date, item)
+        return tick(date: range.lowerBound, item)
     }
 
     public subscript(bounds: Range<Self.Index>) -> Self.SubSequence {
-        let date = self.date
         let slice = ticks[bounds]
-        return SubSequence(date: date, ticks: slice)
+        return SubSequence(range: range, ticks: slice)
     }
 
     public func index(before i: Int) -> Int {

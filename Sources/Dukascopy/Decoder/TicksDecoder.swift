@@ -16,9 +16,9 @@ enum DecoderError: Error {
 internal
 final class TicksDecoder {
     @available(OSX 10.11, *)
-    func decode(with data: Data, start: Date) throws -> TicksCollection {
+    func decode(with data: Data, range: Range<Date>) throws -> TicksCollection {
         if data.isEmpty {
-            return TicksCollection(date: start, ticks: [])
+            return TicksCollection(range: range, ticks: [])
         }
 
         guard let decompressed = data.decompress() else {
@@ -53,7 +53,7 @@ final class TicksDecoder {
                 blocks.append(.init(time: time, askp: askp, bidp: bidp, askv: askV, bidv: bidV))
             }
 
-            return TicksCollection(date: start, ticks: blocks)
+            return TicksCollection(range: range, ticks: blocks)
         }
     }
 }

@@ -12,16 +12,19 @@ final class TicksCollectionTest: XCTestCase {
     func testCollection() {
         let date = formatter.date(from: "04-04-2019 11:00")!
 
+        let range = date ..< formatter.date(from: "04-04-2019 12:00")!
+
         let bloks: [DukascopyTick] = [
             .init(time: 12, askp: 12000, bidp: 12004, askv: 0.1, bidv: 0.1),
             .init(time: 120, askp: 12200, bidp: 12304, askv: 0.1, bidv: 0.1),
             .init(time: 12320, askp: 12100, bidp: 12104, askv: 0.1, bidv: 0.1),
         ]
 
-        let emptyCollection = TicksCollection(date: date, ticks: [])
-        XCTAssertEqual(emptyCollection.bounds, date ..< date)
+        let emptyCollection = TicksCollection(range: range, ticks: [])
 
-        var collection = TicksCollection(date: date, ticks: bloks)
+        XCTAssertTrue(emptyCollection.bounds.isEmpty)
+
+        var collection = TicksCollection(range: range, ticks: bloks)
 
         XCTAssertEqual(collection.count, 3)
 
@@ -35,7 +38,7 @@ final class TicksCollectionTest: XCTestCase {
             .init(time: 18320, askp: 16100, bidp: 17104, askv: 0.1, bidv: 0.12),
         ]
 
-        let collection2 = TicksCollection(date: date, ticks: bloks2)
+        let collection2 = TicksCollection(range: range, ticks: bloks2)
 
         collection.append(collection2)
 
@@ -49,7 +52,8 @@ final class TicksCollectionTest: XCTestCase {
             .init(time: 112, askp: 12200, bidp: 12104, askv: 0.1, bidv: 0.12),
         ]
 
-        let collection3 = TicksCollection(date: formatter.date(from: "04-04-2019 11:10")!, ticks: bloks3)
+        let range2 = formatter.date(from: "04-04-2019 11:10")! ..< formatter.date(from: "04-04-2019 12:00")!
+        let collection3 = TicksCollection(range: range2, ticks: bloks3)
 
         XCTAssertEqualDate(collection3.bounds.lowerBound,
                            accuracyFormatter.date(from: "04-04-2019 11:10:00.025")!, accuracy: 0.001)
@@ -66,9 +70,9 @@ final class TicksCollectionTest: XCTestCase {
 
         let end = collection.index(collection.startIndex, offsetBy: 8)
 
-        let range = begin ..< end
+        let sliceRange = begin ..< end
 
-        let slice = collection[range]
+        let slice = collection[sliceRange]
 
         XCTAssertEqualDate(slice.bounds.lowerBound, accuracyFormatter.date(from: "04-04-2019 11:00:12.320")!)
 
@@ -77,6 +81,7 @@ final class TicksCollectionTest: XCTestCase {
 
     func testCollection_1() {
         let date = formatter.date(from: "04-04-2019 11:30")!
+        let range = date ..< formatter.date(from: "04-04-2019 12:00")!
 
         let ticks: [DukascopyTick] = [
             .init(time: 12, askp: 12000, bidp: 12004, askv: 0.1, bidv: 0.1),
@@ -84,7 +89,7 @@ final class TicksCollectionTest: XCTestCase {
             .init(time: 540, askp: 12100, bidp: 12104, askv: 0.1, bidv: 0.1),
         ]
 
-        var collection = TicksCollection(date: date, ticks: ticks)
+        var collection = TicksCollection(range: range, ticks: ticks)
 
         let ticksSliced: [DukascopyTick] = [
             .init(time: 1012, askp: 12000, bidp: 12004, askv: 0.1, bidv: 0.1),
@@ -92,7 +97,7 @@ final class TicksCollectionTest: XCTestCase {
             .init(time: 10540, askp: 12100, bidp: 12104, askv: 0.1, bidv: 0.1),
         ]
 
-        let s = TicksCollection(date: date, ticks: ticksSliced)[1 ..< 2]
+        let s = TicksCollection(range: range, ticks: ticksSliced)[1 ..< 2]
         collection.append(s)
 
         let ticks_2: [DukascopyTick] = [
@@ -106,7 +111,9 @@ final class TicksCollectionTest: XCTestCase {
 
         let date2 = formatter.date(from: "04-04-2019 12:00")!
 
-        let collection2 = TicksCollection(date: date2, ticks: ticks_2)
+        let range2 = date2 ..< formatter.date(from: "04-04-2019 13:00")!
+
+        let collection2 = TicksCollection(range: range2, ticks: ticks_2)
 
         let begin = collection2.index(collection2.startIndex, offsetBy: 1)
 
