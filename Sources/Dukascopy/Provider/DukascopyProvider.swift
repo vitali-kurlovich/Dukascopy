@@ -6,6 +6,7 @@
 //  Copyright © 2020 Vitali Kurlovich. All rights reserved.
 //
 
+import DukascopyDecoder
 import DukascopyURL
 import Foundation
 
@@ -18,8 +19,6 @@ class DukascopyProvider {
     enum ProviderError: Swift.Error {
         case invalidData
     }
-
-    private let urlFactory = URLFactory()
 
     private let downloader = DukascopyDownloader()
 

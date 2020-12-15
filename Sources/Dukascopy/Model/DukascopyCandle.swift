@@ -5,21 +5,10 @@
 //  Created by Vitali Kurlovich on 4/19/20.
 //
 
+import DukascopyDecoder
 import Foundation
 
-internal
-struct DukascopyCandle: Equatable {
-    struct Price: Equatable {
-        let open: Int32
-        let close: Int32
-        let low: Int32
-        let high: Int32
-    }
-
-    let time: Int32
-    let price: Price
-    let volume: Float32
-}
+typealias DukascopyCandle = CandlesDecoder.Candle
 
 internal
 struct DukascopyCandlesCollection: Equatable {
