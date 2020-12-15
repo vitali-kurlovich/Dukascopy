@@ -16,12 +16,12 @@ public
 class DukascopyDownloader {
     public typealias Format = URLFactory.Format
 
-    private let urlFactory: URLFactory
+    private let requestFactory: URLRequestFactory
 
     private let cachePolicy: URLRequest.CachePolicy
     private let timeout: TimeInterval
 
-    public init(_ urlFactory: URLFactory = URLFactory(),
+    public init(_ requestFactory: URLRequestFactory = URLRequestFactory(),
                 session: URLSession = URLSession(configuration: .default),
                 cachePolicy: URLRequest.CachePolicy = .returnCacheDataElseLoad,
                 timeout: TimeInterval = TimeInterval(15))
@@ -29,7 +29,7 @@ class DukascopyDownloader {
         self.cachePolicy = cachePolicy
         self.timeout = timeout
 
-        self.urlFactory = urlFactory
+        self.requestFactory = requestFactory
         self.session = session
     }
 
@@ -67,7 +67,11 @@ extension DukascopyDownloader {
     {
         var results = [Result<(data: Data, range: Range<Date>), Error>]()
 
-        let requests = try request(format: format, for: currency, range: range)
+        let requests = try requestFactory.request(cachePolicy: cachePolicy,
+                                                  timeout: timeout,
+                                                  format: format,
+                                                  for: currency, range: range)
+
         results.reserveCapacity(requests.underestimatedCount)
 
         let dispatchGroup = DispatchGroup()
@@ -129,7 +133,11 @@ extension DukascopyDownloader {
     }
 
     public func download(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int = 0, completion: @escaping ((Result<(data: Data, range: Range<Date>), Error>) -> Void)) throws {
-        let request = try self.request(format: format, for: currency, year: year, month: month, day: day, hour: hour)
+        let request = try requestFactory.request(cachePolicy: cachePolicy,
+                                                 timeout: timeout,
+                                                 format: format,
+                                                 for: currency,
+                                                 year: year, month: month, day: day, hour: hour)
 
         let components = DateComponents(year: year, month: month, day: day, hour: hour)
 
@@ -197,21 +205,6 @@ extension DukascopyDownloader {
 
 private
 extension DukascopyDownloader {
-    func request(format: Format, for currency: String, range: Range<Date>) throws -> [(request: URLRequest, range: Range<Date>)] {
-        let urls = try urlFactory.url(format: format, for: currency, range: range)
-
-        return urls.compactMap { (data) -> (request: URLRequest, range: Range<Date>)? in
-            let request = URLRequest(url: data.url, cachePolicy: cachePolicy, timeoutInterval: timeout)
-            return (request: request, range: data.range)
-        }
-    }
-
-    func request(format: Format, for currency: String, year: Int, month: Int, day: Int, hour: Int) throws -> URLRequest {
-        let url = try urlFactory.url(format: format, for: currency, year: year, month: month, day: day, hour: hour)
-
-        return URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: timeout)
-    }
-
     func infoRequest() -> URLRequest {
         let base = "https://freeserv.dukascopy.com/2.0/index.php?path=common%2Finstruments&json"
         let url = URL(string: base)!
