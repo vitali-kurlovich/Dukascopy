@@ -7,7 +7,7 @@
 //
 
 import DukascopyDecoder
-import DukascopyURL
+import DukascopyDownloader
 import Foundation
 
 #if canImport(FoundationNetworking)

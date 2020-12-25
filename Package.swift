@@ -14,15 +14,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-        .package(url: "https://github.com/vitali-kurlovich/DukascopyURL.git", from: "1.1.1"),
-        .package(url: "https://github.com/vitali-kurlovich/DukascopyDecoder.git", from: "1.0.2"),
+        .package(url: "https://github.com/vitali-kurlovich/DukascopyDownloader.git", from: "1.0.0"),
+        .package(url: "https://github.com/vitali-kurlovich/DukascopyDecoder.git", from: "1.0.3"),
 
         // https://github.com/vitali-kurlovich/DukascopyDecoder.git
     ],
     targets: [
         .target(
             name: "Dukascopy",
-            dependencies: ["DukascopyURL", "DukascopyDecoder",
+            dependencies: ["DukascopyDownloader", "DukascopyDecoder",
                            .product(name: "Logging", package: "swift-log")]
         ),
         .testTarget(
