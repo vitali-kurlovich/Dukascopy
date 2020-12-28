@@ -55,7 +55,7 @@ extension CandlesCollection: BidirectionalCollection {
 }
 
 extension CandlesCollection {
-    internal mutating
+    mutating
     func append<S: Sequence>(contentsOf: S) where S.Element == DukascopyBidAskCandle {
         candles.append(contentsOf: contentsOf)
     }

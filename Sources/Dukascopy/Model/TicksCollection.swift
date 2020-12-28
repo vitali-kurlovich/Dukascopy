@@ -26,17 +26,17 @@ struct TicksCollection: TicksSequence {
 }
 
 extension TicksCollection {
-    internal mutating
+    mutating
     func append(_ tick: DukascopyTick) {
         ticks.append(tick)
     }
 
-    internal mutating
+    mutating
     func append<S: Sequence>(contentsOf: S) where S.Element == DukascopyTick {
         ticks.append(contentsOf: contentsOf)
     }
 
-    internal mutating
+    mutating
     func append(_ collection: TicksCollection) {
         let delta = collection.range.lowerBound.timeIntervalSince(range.lowerBound)
 
@@ -55,7 +55,7 @@ extension TicksCollection {
         }
     }
 
-    internal mutating
+    mutating
     func append(_ collection: SliceTicksCollection) {
         let delta = collection.range.lowerBound.timeIntervalSince(range.lowerBound)
 
