@@ -4,15 +4,15 @@ branches:
   - master
 env:
   global:
-  - SWIFT_BRANCH=swift-5.2-release
-  - SWIFT_VERSION=swift-5.2-RELEASE
+  - SWIFT_BRANCH=swift-5.3.2-release
+  - SWIFT_VERSION=swift-5.3.2-RELEASE
   - CODECOV_TOKEN="25b1a9a2-a79e-4f50-970d-bc369de5584d"
   - PACKAGE_VERSION=0.0.1
 jobs:
   include:
   - stage: OSX test
     os: osx
-    osx_image: xcode11.3
+    osx_image: xcode12.3
     language: swift
     script:
     - xcodebuild -scheme Dukascopy test -enableCodeCoverage YES -parallel-testing-enabled YES
