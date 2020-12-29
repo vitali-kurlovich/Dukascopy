@@ -8,6 +8,8 @@
 @testable import Dukascopy
 import XCTest
 
+private let formatter = FormatterUtils.formatter
+
 final class DukascopyCandlesCollectionTest: XCTestCase {
     func testCandlesCollection() throws {
         let date = formatter.date(from: "02-04-2019 11:00")!
@@ -78,19 +80,3 @@ final class DukascopyCandlesCollectionTest: XCTestCase {
         ("testCandlesCollection_1", testCandlesCollection_1),
     ]
 }
-
-private let utc = TimeZone(identifier: "UTC")!
-
-private let calendar: Calendar = {
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = utc
-    return calendar
-}()
-
-private let formatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.calendar = calendar
-    formatter.timeZone = utc
-    formatter.dateFormat = "dd-MM-yyyy HH:mm"
-    return formatter
-}()
