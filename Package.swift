@@ -15,7 +15,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/vitali-kurlovich/DukascopyDownloader.git", from: "1.0.0"),
-        .package(url: "https://github.com/vitali-kurlovich/DukascopyDecoder.git", from: "1.2.0"),
+        .package(url: "https://github.com/vitali-kurlovich/DukascopyDecoder.git", from: "1.3.1"),
         .package(url: "https://github.com/vitali-kurlovich/DukascopyModel.git", from: "1.6.1"),
 
         //

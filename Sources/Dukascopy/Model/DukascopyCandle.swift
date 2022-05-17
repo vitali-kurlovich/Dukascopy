@@ -49,7 +49,7 @@ extension DukascopyCandlesCollection {
         if increment == 0 {
             append(contentsOf: collection.candles)
         } else {
-            let candles = collection.candles.lazy.map { (candle) -> DukascopyCandle in
+            let candles = collection.candles.lazy.map { candle -> DukascopyCandle in
 
                 .init(time: candle.time + increment, price: candle.price, volume: candle.volume)
             }

@@ -45,7 +45,7 @@ extension TicksCollection {
         if increment == 0 {
             append(contentsOf: collection.ticks)
         } else {
-            let ticks = collection.ticks.lazy.map { (tick) -> DukascopyTick in
+            let ticks = collection.ticks.lazy.map { tick -> DukascopyTick in
                 .init(time: tick.time + increment,
                       askp: tick.askp, bidp: tick.bidp,
                       askv: tick.askv, bidv: tick.bidv)
@@ -64,7 +64,7 @@ extension TicksCollection {
         if increment == 0 {
             append(contentsOf: collection.ticks)
         } else {
-            let ticks = collection.ticks.lazy.map { (tick) -> DukascopyTick in
+            let ticks = collection.ticks.lazy.map { tick -> DukascopyTick in
                 .init(time: tick.time + increment,
                       askp: tick.askp, bidp: tick.bidp,
                       askv: tick.askv, bidv: tick.bidv)

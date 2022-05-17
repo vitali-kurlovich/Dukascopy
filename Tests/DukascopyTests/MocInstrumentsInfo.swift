@@ -9,9 +9,7 @@ import Foundation
 import XCTest
 
 class MocInstrumentsInfo {
-    private(set) lazy var jsonData: Data = {
-        resource.data(using: .utf8)!
-    }()
+    private(set) lazy var jsonData: Data = resource.data(using: .utf8)!
 }
 
 private let resource = #"""

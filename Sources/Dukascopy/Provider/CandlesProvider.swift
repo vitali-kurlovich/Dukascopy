@@ -1,7 +1,4 @@
 //
-//  DukascopyProvider.swift
-//  Chart
-//
 //  Created by Vitali Kurlovich on 3/12/20.
 //  Copyright © 2020 Vitali Kurlovich. All rights reserved.
 //
@@ -10,7 +7,6 @@ import DukascopyDecoder
 import DukascopyDownloader
 import Foundation
 
-@available(OSX 10.11, *)
 class CandlesProvider {
     enum ProviderError: Swift.Error {
         case invalidData
@@ -21,7 +17,6 @@ class CandlesProvider {
     private let candlesDecoder = CandlesDecoder()
 }
 
-@available(OSX 10.11, *)
 extension CandlesProvider {
     public
     func fetch(for currency: String, range: Range<Date>, completion: ((Result<CandlesCollection, Error>) -> Void)? = nil) throws {
@@ -99,7 +94,6 @@ extension CandlesProvider {
     }
 }
 
-@available(OSX 10.11, *)
 extension CandlesProvider {
     private typealias CandelsType = CandlesDecoder.CandelsType
 
@@ -128,7 +122,7 @@ extension CandlesProvider {
             case let .success(items):
 
                 do {
-                    let candles = try items.compactMap { (result) -> DukascopyCandlesCollection? in
+                    let candles = try items.compactMap { result -> DukascopyCandlesCollection? in
                         switch result {
                         case let .success((data, range)):
                             return try self.decodeCandles(data, date: range.lowerBound, type: type)
@@ -202,7 +196,6 @@ extension CandlesProvider {
     }
 }
 
-@available(OSX 10.11, *)
 extension CandlesProvider {
     private
     func decodeCandles(_ data: Data, date: Date, type: CandlesDecoder.CandelsType) throws -> DukascopyCandlesCollection {
