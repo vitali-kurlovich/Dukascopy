@@ -133,11 +133,6 @@ final class TicksCollectionTest: XCTestCase {
 
         XCTAssertEqual(collection.count, 8)
     }
-
-    static var allTests = [
-        ("testCollection", testCollection),
-        ("testCollection_1", testCollection_1),
-    ]
 }
 
 private let utc = TimeZone(identifier: "UTC")!

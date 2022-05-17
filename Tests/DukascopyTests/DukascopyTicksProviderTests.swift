@@ -13,7 +13,6 @@ private let provider = DukascopyTicksProvider()
 private let formatter = FormatterUtils.formatter
 private let accuracyFormatter = FormatterUtils.accuracyFormatter
 
-@available(OSX 10.11, *)
 final class DukascopyTicksProviderTests: XCTestCase {
     func testDownload() throws {
         let expectation = XCTestExpectation(description: "Download Dukacopy bi5 file")
@@ -104,9 +103,4 @@ final class DukascopyTicksProviderTests: XCTestCase {
         })
         wait(for: [expectation], timeout: 10.0)
     }
-
-    static var allTests = [
-        ("testDownload", testDownload),
-        ("testDownload_1", testDownload_1),
-    ]
 }

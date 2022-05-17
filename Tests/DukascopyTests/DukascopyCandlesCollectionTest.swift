@@ -74,9 +74,4 @@ final class DukascopyCandlesCollectionTest: XCTestCase {
 
         XCTAssertEqual(collection_1, DukascopyCandlesCollection(type: .ask, date: date_1, candles: candles))
     }
-
-    static var allTests = [
-        ("testCandlesCollection", testCandlesCollection),
-        ("testCandlesCollection_1", testCandlesCollection_1),
-    ]
 }
